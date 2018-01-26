@@ -1,0 +1,33 @@
+---
+ - hosts: web
+   tasks:
+    - name: Installing mariadb
+      yum: name=mariadb-server  state=present
+
+    - name: Installing python-pip 
+      yum: name=python-pip   state=present 
+
+    - name: upgrading pip
+      command: pip install --upgrade pip
+
+    - name: Installing MySQL-python
+      yum: name=MySQL-python  state=present
+
+    - name: Restarting service
+      service: name=mariadb  state=started  enabled=yes
+
+#    - name: setting root user passwd
+#      mysql_user: name=root  password=redhat state=present
+
+    - name: create database adhoc by root user
+      mysql_db: name=adhoc state=present login_user=root login_host=localhost login_password=redhat
+
+    - name: create user 'rajesh'@'localhost' identified by 'redhat'
+      name: grant select,insert,update,delete,create privileges on adhoc.*  to 'rajesh'@'localhost'
+      mysql_user: name=rajesh password=redhat priv=adhoc.*:select,create,insert state=present login_user=root login_password=redhat
+   
+    - name: copy dbbackup.sql file
+      copy: src=/var/www/html/dbbackup.sql dest=/root/dbbackup.sql
+   
+    - name: mysql -u root -p adhoc<file.sql
+      mysql_db: state=import name=adhoc target=/root/dbbackup.sql login_user=root login_password=redhat
