@@ -1,0 +1,56 @@
+---
+ - name: operations on server side 
+   hosts: web 
+   tasks: 
+    - name: installing targetcli
+      yum: name=targetcli state=present
+
+    - name: iptables -F
+      shell: iptables -F
+
+#    - name: tcp
+#      firewalld: port=3206/tcp state=enabled  permanent=true immediate=yes
+#    
+#    - name: udp 
+#      firewalld: port=3206/udp state=enabled  permanent=true immediate=yes
+    
+    - name: restart and enable the service
+      service: name=target state=restarted enabled=yes
+
+    - name: create backstore
+      shell: targetcli /backstores/block create name=devops dev=/dev/vda5 
+
+    - name: create iscsi  
+      shell: targetcli /iscsi create wwn=iqn.2014-05.example.com:devops
+
+    - name: create luns  
+      shell: targetcli /iscsi/iqn.2014-05.example.com:devops/tpg1/luns create /backstores/block/devops
+    
+    - name: create acls
+      shell: targetcli /iscsi/iqn.2014-05.example.com:devops/tpg1/acls create wwn=iqn.1994-05.com.redhat:web
+
+    - name: save the configuration file
+      shell: targetcli saveconfig
+
+    - name: restarting iscsi service
+      service: name=target   state=restarted
+
+ - name: operation on client-side
+   hosts: devops
+   tasks:
+    - name: iptables -F
+      shell: iptables -F
+
+#    - name: tcp 
+#      firewalld: port=3206/tcp state=enabled  permanent=true immediate=yes
+#
+#    - name: udp
+#      firewalld: port=3206/udp state=enabled  permanent=true immediate=yes
+    
+    - name: discovering iscsi-target
+      open_iscsi: show_nodes=yes  portal=192.168.122.164 discover=yes 
+      
+    - name: login
+      open_iscsi: login=yes target=iqn.2014-05.example.com:devops
+
+      
