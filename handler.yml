@@ -1,0 +1,17 @@
+---
+ - hosts: localhost
+   tasks: 
+    - name: installing httpd
+      yum: name=httpd  state=present
+  
+    - name: write the apache config file
+      template: src=/srv/httpd.j2 dest=/etc/httpd.conf
+      notify:
+       - restart apache
+  
+    - name: ensure apache is running (and enable it at boot)
+      service: name=httpd state=started enabled=yes 
+   
+   handlers:
+    - name: restart apache
+      service: name=httpd state=restarted  
