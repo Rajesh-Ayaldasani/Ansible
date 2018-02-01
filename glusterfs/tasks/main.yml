@@ -1,0 +1,28 @@
+---
+# tasks file for glusterfs
+# - name: finding ipaddr
+#   shell: arp-scan -I virbr0 192.168.122.0/24 | grep 192 | awk '{print $1}'>/etc/ansible/glusterfs/files/ip.txt
+#   run_once: true
+#   delegate_to: localhost
+
+ - name: installing glusterfs
+   yum: name="{{ packages }}"  state=present
+ 
+ - name: service restart
+   service: name=glusterd state=restarted enabled=yes
+
+ - name: maintaining firewall
+   firewalld: service=glusterfs permanent=true state=enabled immediate=true
+ 
+ - name: creating volume
+   gluster_volume:
+    state: present
+    name: rvol
+    replicas: 2
+    bricks: /mnt/brick2
+    cluster:
+     - 192.168.122.229
+     - 192.168.122.202
+     - 192.168.122.251
+     - 192.168.122.126
+    force: yes

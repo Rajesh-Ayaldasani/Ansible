@@ -1,0 +1,6 @@
+---
+# vars file for glusterfs
+packages:
+ - glusterfs-server 
+ - glusterfs
+ - glusterfs-fuse
